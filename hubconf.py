@@ -19,7 +19,7 @@ def build_unet(pretrained=False, **kwargs):
     model = UNet(**kwargs)
 
     if pretrained:
-        weights_url = "https://raw.githubusercontent.com/arithescientisttt/unet_briansegmentation/main/weights/unet.pt"
+        weights_url = "https://raw.githubusercontent.com/arithescientisttt/unet_brainsegmentation/main/weights/unet.pt"
         pretrained_weights = torch.hub.load_state_dict_from_url(weights_url, progress=False, map_location='cpu')
         model.load_state_dict(pretrained_weights)
 
