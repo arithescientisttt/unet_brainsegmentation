@@ -8,25 +8,25 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
 
         features = initial_features
-        self.encoder1 = self._create_block(in_channels, features, name="enc1")
+        self.encoder1 = self._create_block(in_channels, features, name="encoder1")
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.encoder2 = self._create_block(features, features * 2, name="enc2")
+        self.encoder2 = self._create_block(features, features * 2, name="encoder2")
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.encoder3 = self._create_block(features * 2, features * 4, name="enc3")
+        self.encoder3 = self._create_block(features * 2, features * 4, name="encoder3")
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.encoder4 = self._create_block(features * 4, features * 8, name="enc4")
+        self.encoder4 = self._create_block(features * 4, features * 8, name="encoder4")
         self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.bottleneck = self._create_block(features * 8, features * 16, name="bottleneck")
 
         self.upconv4 = nn.ConvTranspose2d(features * 16, features * 8, kernel_size=2, stride=2)
-        self.decoder4 = self._create_block(features * 8 * 2, features * 8, name="dec4")
+        self.decoder4 = self._create_block((features * 8) * 2, features * 8, name="decoder4")
         self.upconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
-        self.decoder3 = self._create_block(features * 4 * 2, features * 4, name="dec3")
+        self.decoder3 = self._create_block((features * 4) * 2, features * 4, name="decoder3")
         self.upconv2 = nn.ConvTranspose2d(features * 4, features * 2, kernel_size=2, stride=2)
-        self.decoder2 = self._create_block(features * 2 * 2, features * 2, name="dec2")
+        self.decoder2 = self._create_block((features * 2) * 2, features * 2, name="decoder2")
         self.upconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
-        self.decoder1 = self._create_block(features * 2, features, name="dec1")
+        self.decoder1 = self._create_block(features * 2, features, name="decoder1")
 
         self.final_conv = nn.Conv2d(features, out_channels, kernel_size=1)
 
@@ -65,11 +65,19 @@ class UNet(nn.Module):
         # A helper method to create blocks in the U-Net
         return nn.Sequential(
             OrderedDict([
-                (f"{name}conv1", nn.Conv2d(in_channels, features, kernel_size=3, padding=1, bias=False)),
-                (f"{name}norm1", nn.BatchNorm2d(features)),
-                (f"{name}relu1", nn.ReLU(inplace=True)),
-                (f"{name}conv2", nn.Conv2d(features, features, kernel_size=3, padding=1, bias=False)),
-                (f"{name}norm2", nn.BatchNorm2d(features)),
-                (f"{name}relu2", nn.ReLU(inplace=True)),
+                (f"{name}_conv1", nn.Conv2d(in_channels, features, kernel_size=3, padding=1, bias=False)),
+                (f"{name}_bn1", nn.BatchNorm2d(features)),
+                (f"{name}_relu1", nn.ReLU(inplace=True)),
+                (f"{name}_conv2", nn.Conv2d(features, features, kernel_size=3, padding=1, bias=False)),
+                (f"{name}_bn2", nn.BatchNorm2d(features)),
+                (f"{name}_relu2", nn.ReLU(inplace=True)),
             ])
         )
+
+# Add this function to adjust the state_dict keys
+def adjust_state_dict_keys(state_dict):
+    new_state_dict = OrderedDict()
+    for key, value in state_dict.items():
+        new_key = key.replace("enc", "encoder").replace("dec", "decoder").replace("up", "upconv").replace("norm", "bn")
+        new_state_dict[new_key] = value
+    return new_state_dict
