@@ -1,4 +1,4 @@
-dependencies = ["torch"]
+dependencies = ["torch", "torchvision"]
 
 import torch
 from unet_model import UNet
