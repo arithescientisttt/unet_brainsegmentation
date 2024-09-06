@@ -19,46 +19,46 @@ class UNet(nn.Module):
 
         self.bottleneck = self._create_block(features * 8, features * 16, name="bottleneck")
 
-        self.upconv4 = nn.ConvTranspose2d(features * 16, features * 8, kernel_size=2, stride=2)
+        self.upsampleconv4 = nn.ConvTranspose2d(features * 16, features * 8, kernel_size=2, stride=2)
         self.decoder4 = self._create_block((features * 8) * 2, features * 8, name="decoder4")
-        self.upconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
+        self.upsampleconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
         self.decoder3 = self._create_block((features * 4) * 2, features * 4, name="decoder3")
-        self.upconv2 = nn.ConvTranspose2d(features * 4, features * 2, kernel_size=2, stride=2)
+        self.upsampleconv2 = nn.ConvTranspose2d(features * 4, features * 2, kernel_size=2, stride=2)
         self.decoder2 = self._create_block((features * 2) * 2, features * 2, name="decoder2")
-        self.upconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
+        self.upsampleconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
         self.decoder1 = self._create_block(features * 2, features, name="decoder1")
 
         self.final_conv = nn.Conv2d(features, out_channels, kernel_size=1)
 
     def forward(self, x):
         # Encoding
-        enc1 = self.encoder1(x)
-        enc2 = self.encoder2(self.pool1(enc1))
-        enc3 = self.encoder3(self.pool2(enc2))
-        enc4 = self.encoder4(self.pool3(enc3))
+        encoder1 = self.encoder1(x)
+        encoder2 = self.encoder2(self.pool1(encoder1))
+        encoder3 = self.encoder3(self.pool2(encoder2))
+        encoder4 = self.encoder4(self.pool3(encoder3))
 
         # Bottleneck
-        bottleneck = self.bottleneck(self.pool4(enc4))
+        bottleneck = self.bottleneck(self.pool4(encoder4))
 
         # Decoding
-        dec4 = self.upconv4(bottleneck)
-        dec4 = torch.cat((dec4, enc4), dim=1)
-        dec4 = self.decoder4(dec4)
+        decoder4 = self.upsampleconv4(bottleneck)
+        decoder4 = torch.cat((decoder4, encoder4), dim=1)
+        decoder4 = self.decoder4(decoder4)
 
-        dec3 = self.upconv3(dec4)
-        dec3 = torch.cat((dec3, enc3), dim=1)
-        dec3 = self.decoder3(dec3)
+        decoder3 = self.upsampleconv3(decoder4)
+        decoder3 = torch.cat((decoder3, encoder3), dim=1)
+        decoder3 = self.decoder3(decoder3)
 
-        dec2 = self.upconv2(dec3)
-        dec2 = torch.cat((dec2, enc2), dim=1)
-        dec2 = self.decoder2(dec2)
+        decoder2 = self.upsampleconv2(decoder3)
+        decoder2 = torch.cat((decoder2, encoder2), dim=1)
+        decoder2 = self.decoder2(decoder2)
 
-        dec1 = self.upconv1(dec2)
-        dec1 = torch.cat((dec1, enc1), dim=1)
-        dec1 = self.decoder1(dec1)
+        decoder1 = self.upsampleconv1(decoder2)
+        decoder1 = torch.cat((decoder1, encoder1), dim=1)
+        decoder1 = self.decoder1(decoder1)
 
         # Final Convolution and Sigmoid Activation
-        return torch.sigmoid(self.final_conv(dec1))
+        return torch.sigmoid(self.final_conv(decoder1))
 
     @staticmethod
     def _create_block(in_channels, features, name):
@@ -74,10 +74,4 @@ class UNet(nn.Module):
             ])
         )
 
-# Add this function to adjust the state_dict keys
-def adjust_state_dict_keys(state_dict):
-    new_state_dict = OrderedDict()
-    for key, value in state_dict.items():
-        new_key = key.replace("enc", "encoder").replace("dec", "decoder").replace("up", "upconv").replace("norm", "bn")
-        new_state_dict[new_key] = value
-    return new_state_dict
+
