@@ -2,6 +2,7 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 
+
 class UNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=1, initial_features=32):
         super(UNet, self).__init__()
@@ -61,6 +62,7 @@ class UNet(nn.Module):
 
     @staticmethod
     def _create_block(in_channels, features, name):
+        # A helper method to create blocks in the U-Net
         return nn.Sequential(
             OrderedDict([
                 (f"{name}conv1", nn.Conv2d(in_channels, features, kernel_size=3, padding=1, bias=False)),
