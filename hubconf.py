@@ -17,6 +17,8 @@ def unet(pretrained=False, **kwargs):
 
     if pretrained:
         state_dict = torch.load("weights/unet.pt")
+        state_dict = torch.hub.load_state_dict_from_url(checkpoint, progress=False, map_location='cpu')
+        
         model.load_state_dict(state_dict)
 
     return model
