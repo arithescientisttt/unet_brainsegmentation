@@ -3,7 +3,7 @@ dependencies = ["torch", "torchvision"]
 import torch
 from unet_model import UNet
 
-def build_unet(pretrained=False, **kwargs):
+def unet(pretrained=False, **kwargs):
     """
     Constructs the U-Net model for biomedical image segmentation with optional pretrained weights.
     
