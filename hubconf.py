@@ -16,7 +16,8 @@ def unet(pretrained=False, **kwargs):
     model = UNet(**kwargs)
 
     if pretrained:
-        checkpoint = "https://github.com/arithescientisttt/unet_brainsegmentation/blob/main/weights/unet.pt"
+        checkpoint = "https://raw.githubusercontent.com/arithescientisttt/unet_briansegmentation/main/weights/unet.pt
+"
         state_dict = torch.hub.load_state_dict_from_url(checkpoint, progress=False, map_location='cpu')
         model.load_state_dict(state_dict)
 
