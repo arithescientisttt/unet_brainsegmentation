@@ -15,10 +15,12 @@ def unet(pretrained=False, **kwargs):
     """
     model = UNet(**kwargs)
 
+    # Load pre-trained weights
     if pretrained:
-        checkpoint = "https://raw.githubusercontent.com/arithescientisttt/unet_briansegmentation/main/weights/unet.pt
-"
-        state_dict = torch.hub.load_state_dict_from_url(checkpoint, progress=False, map_location='cpu')
+        state_dict = torch.hub.load_state_dict_from_url(
+            'https://raw.githubusercontent.com/arithescientisttt/unet_briansegmentation/main/weights/unet.pt',
+            map_location='cpu'
+        )
         model.load_state_dict(state_dict)
-
+    
     return model
