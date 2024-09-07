@@ -2,35 +2,35 @@ import numpy as np
 from skimage.transform import rescale, rotate
 from torchvision.transforms import Compose
 
+# Function to combine multiple transformations (scaling, rotating, flipping)
+def apply_transforms(scaling_factor=None, rotation_angle=None, flip_probability=None):
+    transform_sequence = []
 
-def transforms(scale=None, angle=None, flip_prob=None):
-    transform_list = []
+    if scaling_factor is not None:
+        transform_sequence.append(ScaleTransform(scaling_factor))
+    if rotation_angle is not None:
+        transform_sequence.append(RotateTransform(rotation_angle))
+    if flip_probability is not None:
+        transform_sequence.append(HorizontalFlipTransform(flip_probability))
 
-    if scale is not None:
-        transform_list.append(Scale(scale))
-    if angle is not None:
-        transform_list.append(Rotate(angle))
-    if flip_prob is not None:
-        transform_list.append(HorizontalFlip(flip_prob))
+    return Compose(transform_sequence)
 
-    return Compose(transform_list)
-
-
-class Scale(object):
-
-    def __init__(self, scale):
-        self.scale = scale
+# Class for scaling transformation
+class ScaleTransform(object):
+    def __init__(self, scale_factor):
+        self.scale_factor = scale_factor
 
     def __call__(self, sample):
         image, mask = sample
+        original_size = image.shape[0]
 
-        img_size = image.shape[0]
+        # Random scaling within the range [1.0 - scale, 1.0 + scale]
+        scaling_value = np.random.uniform(low=1.0 - self.scale_factor, high=1.0 + self.scale_factor)
 
-        scale = np.random.uniform(low=1.0 - self.scale, high=1.0 + self.scale)
-
+        # Apply scaling to both image and mask
         image = rescale(
             image,
-            (scale, scale),
+            (scaling_value, scaling_value),
             multichannel=True,
             preserve_range=True,
             mode="constant",
@@ -38,7 +38,7 @@ class Scale(object):
         )
         mask = rescale(
             mask,
-            (scale, scale),
+            (scaling_value, scaling_value),
             order=0,
             multichannel=True,
             preserve_range=True,
@@ -46,47 +46,50 @@ class Scale(object):
             anti_aliasing=False,
         )
 
-        if scale < 1.0:
-            diff = (img_size - image.shape[0]) / 2.0
-            padding = ((int(np.floor(diff)), int(np.ceil(diff))),) * 2 + ((0, 0),)
+        # Padding or cropping based on scale value
+        if scaling_value < 1.0:
+            pad_size = (original_size - image.shape[0]) / 2.0
+            padding = ((int(np.floor(pad_size)), int(np.ceil(pad_size))),) * 2 + ((0, 0),)
             image = np.pad(image, padding, mode="constant", constant_values=0)
             mask = np.pad(mask, padding, mode="constant", constant_values=0)
         else:
-            x_min = (image.shape[0] - img_size) // 2
-            x_max = x_min + img_size
-            image = image[x_min:x_max, x_min:x_max, ...]
-            mask = mask[x_min:x_max, x_min:x_max, ...]
+            crop_min = (image.shape[0] - original_size) // 2
+            crop_max = crop_min + original_size
+            image = image[crop_min:crop_max, crop_min:crop_max, ...]
+            mask = mask[crop_min:crop_max, crop_min:crop_max, ...]
 
         return image, mask
 
 
-class Rotate(object):
-
-    def __init__(self, angle):
-        self.angle = angle
+# Class for rotating transformation
+class RotateTransform(object):
+    def __init__(self, max_angle):
+        self.max_angle = max_angle
 
     def __call__(self, sample):
         image, mask = sample
 
-        angle = np.random.uniform(low=-self.angle, high=self.angle)
-        image = rotate(image, angle, resize=False, preserve_range=True, mode="constant")
-        mask = rotate(
-            mask, angle, resize=False, order=0, preserve_range=True, mode="constant"
-        )
+        # Random rotation between -angle and +angle
+        random_angle = np.random.uniform(low=-self.max_angle, high=self.max_angle)
+        image = rotate(image, random_angle, resize=False, preserve_range=True, mode="constant")
+        mask = rotate(mask, random_angle, resize=False, order=0, preserve_range=True, mode="constant")
+
         return image, mask
 
 
-class HorizontalFlip(object):
-
-    def __init__(self, flip_prob):
-        self.flip_prob = flip_prob
+# Class for horizontal flip transformation
+class HorizontalFlipTransform(object):
+    def __init__(self, flip_probability):
+        self.flip_probability = flip_probability
 
     def __call__(self, sample):
         image, mask = sample
 
-        if np.random.rand() > self.flip_prob:
+        # Flip the image and mask with the specified probability
+        if np.random.rand() > self.flip_probability:
             return image, mask
 
+        # Apply horizontal flip
         image = np.fliplr(image).copy()
         mask = np.fliplr(mask).copy()
 
