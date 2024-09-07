@@ -10,8 +10,7 @@ from utils import crop_sample, pad_sample, resize_sample, normalize_volume
 
 
 class BrainSegmentationDataset(Dataset):
-    """Brain MRI dataset for FLAIR abnormality segmentation"""
-
+    
     in_channels = 3
     out_channels = 1
 

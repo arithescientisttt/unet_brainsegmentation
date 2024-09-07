@@ -9,8 +9,8 @@ from skimage.io import imsave
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from dataset_class import BrainSegmentationDataset as Dataset
-from unet_model import UNet
+from dataset import BrainSegmentationDataset as Dataset
+from unet import UNet
 from utils import compute_dsc, convert_gray_to_rgb, add_outline
 
 

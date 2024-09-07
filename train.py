@@ -9,11 +9,11 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from dataset import BrainSegmentationDataset as Dataset
-from logger import Logger
-from loss import DiceLoss
+from logger_class import Logger
+from dice import DiceLoss
 from transform import transforms
 from unet import UNet
-from utils import log_images, dsc
+from utils import log_visualizations, compute_dsc
 
 
 def main(args):
